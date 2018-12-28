@@ -190,7 +190,7 @@ export function fakeFetchData (value: string): Observable<string[]> {
 }
 
 /* I can move more logic in useAutoComplete, like the 'isLoading' and 'isWarning'
-state or even the rxjs related code. But i want to make useAutoComplete minimun
+state or even the rxjs related code. But i want to make useAutoComplete minimum
 API here. */
 
 export default function AutoComplete () {
@@ -280,7 +280,7 @@ changed. And as i use the event.target.value to fetch the data, it will be a mis
 
 The Possible Solutions:
 
-1. pass [initalValue] as the third param to useEventCallback.(not even acceptable)
+1. pass [inputValue] as the third param to useEventCallback.(not even acceptable)
 
 we can use withLatestFrom(input$) to get the current inputValue. But as I have said,
 the callback returned by 'useEventCallback' run before state actually changed, so this
@@ -294,8 +294,8 @@ but in the callback we make assumption that state will changed to the exact valu
 
 2. apply 'useObservable'. (acceptable but not good)
 
-Instead of using 'useEventCallback', apply 'useObservable' with the [initalValue] as the
-third param. Because now the initalValue becomes a stream, we can be sure the initalValue
+Instead of using 'useEventCallback', apply 'useObservable' with the [inputValue] as the
+third param. Because now the inputValue becomes a stream, we can be sure the inputValue
 is up to date with the state of component.
 
 But this will arise a new problem:
@@ -310,7 +310,7 @@ only updating inputValue, we can update a action type with it. The inputValue st
 something like this: ['change', 'aaaaa'], ['select', 'aaaaa']. Then we can filter out the select
 action with fliter operator.
 
-3. make action to be an observalbe
+3. make action to be an observable
 
 The second solution can solve the intial problem, but will add many unnecessary info in state.
 The best solution I think is to subscribe to the action stream.
