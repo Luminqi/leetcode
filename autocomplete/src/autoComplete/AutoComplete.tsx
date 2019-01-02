@@ -1,24 +1,10 @@
 import React, { useReducer, useRef, useState } from 'react'
-import { Observable, Observer, merge } from 'rxjs';
+import { Observable, Observer, merge } from 'rxjs'
 import { debounceTime, switchMap, filter, map, tap, takeUntil, mapTo } from 'rxjs/operators'
 import { useEventCallback } from 'rxjs-hooks'
-import {
-  State,
-  Action,
-  ClearButtonProps,
-  InputProps,
-  ToggleButtonProps,
-  ItemProps
-} from './types'
+import { State, Action, ClearButtonProps, InputProps, ToggleButtonProps, ItemProps } from './types'
 import { callAll, combineReducers } from './util'
-import {
-  Warn,
-  SearchIcon,
-  Loading,
-  ClearButton,
-  ToggleButton,
-  Menu
-} from './childComponents'
+import { Warn, SearchIcon, Loading, ClearButton, ToggleButton, Menu } from './childComponents'
 import './AutoComplete.css'
 
 const autoCompleteReducer = (state: State, action: Action): State => {
@@ -26,43 +12,43 @@ const autoCompleteReducer = (state: State, action: Action): State => {
     case 'clear': {
       return {
         ...state,
-        inputValue: ''
+        inputValue: '',
       }
     }
     case 'open': {
       return {
         ...state,
-        isOpen: true
+        isOpen: true,
       }
     }
     case 'close': {
       return {
         ...state,
-        isOpen: false
+        isOpen: false,
       }
     }
     case 'toggle': {
       return {
         ...state,
-        isOpen: !state.isOpen
+        isOpen: !state.isOpen,
       }
     }
     case 'change': {
       return {
         ...state,
-        inputValue: action.payload.inputValue
+        inputValue: action.payload.inputValue,
       }
     }
     case 'select': {
       return {
         ...state,
-        inputValue: action.payload.selectedValue
+        inputValue: action.payload.selectedValue,
       }
     }
-    default: return state
+    default:
+      return state
   }
 }
-
 
 // just a example how to use 'stateReducer' to change the bahaviour of the component
 const addEmojis = (state: State, action: Action): State => {
@@ -75,10 +61,11 @@ const addEmojis = (state: State, action: Action): State => {
       }
       return {
         ...state,
-        inputValue: value
+        inputValue: value,
       }
     }
-    default: return state
+    default:
+      return state
   }
 }
 
@@ -103,61 +90,51 @@ prop getters to the appropriate element.
 
 'downshift' uses 'render prop' to reuse code. I think use React hooks can make
 implementation easier and more straightforward. */
- 
-function useAutoComplete ({
-  stateReducer = (state: State, action: Action) => state
-} = {}) {
-  const [state, dispatch] = useReducer(
-    combineReducers(autoCompleteReducer, stateReducer),
-    { inputValue: '', isOpen: false }
-  )
+
+function useAutoComplete({ stateReducer = (state: State, action: Action) => state } = {}) {
+  const [state, dispatch] = useReducer(combineReducers(autoCompleteReducer, stateReducer), {
+    inputValue: '',
+    isOpen: false,
+  })
   const handleEvent = (type: string, payload?: object) => () => {
     const action = payload ? { type, payload } : { type }
     dispatch(action)
   }
-  const getInputProps = ({
-    onChange = undefined, ...props
-  }: InputProps = {}) => {
+  const getInputProps = ({ onChange, ...props }: InputProps = {}) => {
     const handleChange = (e: React.ChangeEvent) => {
       const value = (e.target as HTMLInputElement).value
-      dispatch({type: 'change', payload: { inputValue: value}})
-    } 
+      dispatch({ type: 'change', payload: { inputValue: value } })
+    }
     return {
       value: state.inputValue,
       onChange: callAll(onChange, handleChange),
-      ...props
+      ...props,
     }
   }
-  const getToggleButtonProps = ({
-    onClick = undefined, ...props
-  }: ToggleButtonProps = {}) => {
+  const getToggleButtonProps = ({ onClick, ...props }: ToggleButtonProps = {}) => {
     return {
       isOpen: state.isOpen,
       onClick: callAll(onClick, handleEvent('toggle')),
-      ...props
+      ...props,
     }
   }
-  const getClearButtonProps = ({
-    onClick = undefined, ...props
-  }: ClearButtonProps = {}) => {
+  const getClearButtonProps = ({ onClick, ...props }: ClearButtonProps = {}) => {
     return {
       onClick: callAll(onClick, handleEvent('clear')),
-      ...props
+      ...props,
     }
   }
-  const getItemProps =  ({
-    selectedValue, onClick = undefined, ...props
-  }: ItemProps) => {
+  const getItemProps = ({ selectedValue, onClick, ...props }: ItemProps) => {
     return {
       onClick: callAll(onClick, handleEvent('select', { selectedValue })),
-      ...props
+      ...props,
     }
   }
   const openMenu = () => {
-    dispatch({type: 'open'})
+    dispatch({ type: 'open' })
   }
   const closeMenu = () => {
-    dispatch({type: 'close'})
+    dispatch({ type: 'close' })
   }
   return {
     inputValue: state.inputValue,
@@ -167,19 +144,14 @@ function useAutoComplete ({
     getClearButtonProps,
     getItemProps,
     openMenu,
-    closeMenu
+    closeMenu,
   }
 }
 
-export function fakeFetchData (value: string): Observable<string[]> {
-  const result = [
-    value,
-    value + value,
-    value + value + value
-  ]
+export function fakeFetchData(value: string): Observable<string[]> {
+  const result = [value, value + value, value + value + value]
   return Observable.create((observer: Observer<string[]>) => {
     const id = setTimeout(() => {
-      console.log('received')
       observer.next(result)
       observer.complete()
     }, 2000)
@@ -193,7 +165,7 @@ export function fakeFetchData (value: string): Observable<string[]> {
 state or even the rxjs related code. But i want to make useAutoComplete minimum
 API here. */
 
-export default function AutoComplete () {
+export default function AutoComplete() {
   const {
     inputValue,
     isOpen,
@@ -202,42 +174,41 @@ export default function AutoComplete () {
     getClearButtonProps,
     getItemProps,
     openMenu,
-    closeMenu
+    closeMenu,
   } = useAutoComplete({
-    stateReducer: addEmojis
+    stateReducer: addEmojis,
   })
   const inputRef = useRef(null)
   const focusInput = () => {
     const input = inputRef.current
-    if (input)
-    (input as HTMLInputElement).focus()
+    if (input) (input as HTMLInputElement).focus()
   }
   const [isLoading, setIsLoading] = useState(false)
   const [isWarning, setIsWarning] = useState(false)
   const [changeCallBack, items] = useEventCallback((event$: Observable<React.SyntheticEvent>) => {
     const warn$ = event$.pipe(
-      map(event => (event.target as HTMLInputElement).value),
-      filter(value => value.length > 30),
+      map((event) => (event.target as HTMLInputElement).value),
+      filter((value) => value.length > 30),
       tap(() => {
         setIsLoading(false)
         setIsWarning(true)
         closeMenu()
       }),
-      mapTo([] as string[])
+      mapTo([] as string[]),
     )
     const default$ = event$.pipe(
-      map(event => (event.target as HTMLInputElement).value),
+      map((event) => (event.target as HTMLInputElement).value),
       debounceTime(500),
-      filter(value => value.length > 0 && value.length <= 30),
+      filter((value) => value.length > 0 && value.length <= 30),
       tap(() => {
         setIsLoading(true)
         setIsWarning(false)
       }),
-      switchMap(value => fakeFetchData(value).pipe(takeUntil(warn$))),
+      switchMap((value) => fakeFetchData(value).pipe(takeUntil(warn$))),
       tap(() => {
         setIsLoading(false)
         openMenu()
-      })
+      }),
     )
     return merge(default$, warn$)
   })
@@ -248,18 +219,12 @@ export default function AutoComplete () {
         <input
           className="autocomplete-input"
           ref={inputRef}
-          {...getInputProps({onChange: e => changeCallBack(e!)})}
+          {...getInputProps({ onChange: (e) => changeCallBack(e!) })}
         />
         <SearchIcon />
-        <ClearButton {...getClearButtonProps({onClick: focusInput, visibility: inputValue !== ''})} />
+        <ClearButton {...getClearButtonProps({ onClick: focusInput, visibility: inputValue !== '' })} />
         <div className="autocomplete-button-wrpper">
-          { 
-            isLoading
-              ? <Loading />
-              : items && items.length
-                ? <ToggleButton {...getToggleButtonProps()} />
-                : null
-          }
+          {isLoading ? <Loading /> : items && items.length ? <ToggleButton {...getToggleButtonProps()} /> : null}
         </div>
       </div>
       <Menu items={items} isOpen={isOpen} isLoading={isLoading} getItemProps={getItemProps} />
@@ -317,5 +282,3 @@ The best solution I think is to subscribe to the action stream.
 
 I have create a 'useReducerEffect' hook to solve this problem. Please see the comment in
 'AutoComplete_test.tsx' */
-
-

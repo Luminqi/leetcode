@@ -1,10 +1,8 @@
-import {
-  Reducer
-} from './types'
+import { Reducer } from './types'
 
-export function callAll (...fns: (Function | undefined)[]) {
+export function callAll(...fns: (Function | undefined)[]) {
   return (...args: any[]) => {
-    fns.forEach(fn => {
+    fns.forEach((fn) => {
       if (fn) {
         fn(...args)
       }
@@ -12,7 +10,6 @@ export function callAll (...fns: (Function | undefined)[]) {
   }
 }
 
-export function combineReducers<State, Action> (...reducers: Reducer<State, Action>[]) {
-  return (state: State, action: Action) => 
-    reducers.reduce((newState, reducer) => reducer(newState, action), state)
+export function combineReducers<State, Action>(...reducers: Reducer<State, Action>[]) {
+  return (state: State, action: Action) => reducers.reduce((newState, reducer) => reducer(newState, action), state)
 }

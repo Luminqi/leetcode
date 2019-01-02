@@ -1,25 +1,10 @@
 import React, { useReducer, useRef, useEffect, useState, useMemo } from 'react'
-import { Observable, merge, BehaviorSubject, Subject } from 'rxjs';
+import { Observable, merge, BehaviorSubject, Subject } from 'rxjs'
 import { debounceTime, switchMap, filter, map, tap, takeUntil, mapTo, withLatestFrom } from 'rxjs/operators'
-import {
-  Action,
-  ClearButtonProps,
-  InputProps,
-  ToggleButtonProps,
-  ItemProps
-} from './types'
+import { Action, ClearButtonProps, InputProps, ToggleButtonProps, ItemProps } from './types'
 import { callAll, combineReducers } from './util'
-import {
-  Warn,
-  SearchIcon,
-  Loading,
-  ClearButton,
-  ToggleButton,
-  Menu
-} from './childComponents'
-import {
-  fakeFetchData
-} from './AutoComplete'
+import { Warn, SearchIcon, Loading, ClearButton, ToggleButton, Menu } from './childComponents'
+import { fakeFetchData } from './AutoComplete'
 import './AutoComplete.css'
 
 /* How to use:
@@ -45,21 +30,19 @@ the state. */
 type EffectFactory<Action, State> = (action$: Observable<Action>, state$: Observable<State>) => Observable<any>
 type ReturnValue<Action> = [any, (action: Action) => void]
 
-function useReducerEffect<Action, State> (
+function useReducerEffect<Action, State>(
   effectFactory: EffectFactory<Action, State>,
   state: State,
   dispatch: React.Dispatch<Action>,
   initialAction?: Action,
-  initialResult?: any
+  initialResult?: any,
 ): ReturnValue<Action> {
   const [result, setResult] = useState(initialResult !== undefined ? initialResult : null)
   const { state$, action$, actions, dispatchWithEffect } = useMemo(() => {
     const stateSubject$ = new BehaviorSubject(state)
-    const actionSubject$ = initialAction !== undefined
-      ? new BehaviorSubject(initialAction)
-      : new Subject<Action>()
+    const actionSubject$ = initialAction !== undefined ? new BehaviorSubject(initialAction) : new Subject<Action>()
     // use a array to accumulate actions
-    const actions: Action[] = [] 
+    const actions: Action[] = []
     const dispatchWithEffect = (action: Action) => {
       dispatch(action)
       actions.push(action)
@@ -68,17 +51,20 @@ function useReducerEffect<Action, State> (
       state$: stateSubject$,
       action$: actionSubject$,
       actions,
-      dispatchWithEffect
+      dispatchWithEffect,
     }
   }, [])
 
   // update state$ before action$ to prevent stale state
-  useEffect(() => {
-    state$.next(state)
-  }, [state])
+  useEffect(
+    () => {
+      state$.next(state)
+    },
+    [state],
+  )
 
   useEffect(() => {
-    while(actions.length) {
+    while (actions.length) {
       action$.next(actions.shift())
     }
   })
@@ -146,52 +132,53 @@ const autoCompleteReducer = (state: State, action: Action): State => {
     case 'clear': {
       return {
         ...state,
-        inputValue: ''
+        inputValue: '',
       }
     }
     case 'open': {
       return {
         ...state,
-        isOpen: true
+        isOpen: true,
       }
     }
     case 'close': {
       return {
         ...state,
-        isOpen: false
+        isOpen: false,
       }
     }
     case 'toggle': {
       return {
         ...state,
-        isOpen: !state.isOpen
+        isOpen: !state.isOpen,
       }
     }
     case 'change': {
       return {
         ...state,
-        inputValue: action.payload.inputValue
+        inputValue: action.payload.inputValue,
       }
     }
     case 'select': {
       return {
         ...state,
-        inputValue: action.payload.selectedValue
+        inputValue: action.payload.selectedValue,
       }
     }
     case 'setIsLoading': {
       return {
         ...state,
-        isLoading: action.payload.isLoading
+        isLoading: action.payload.isLoading,
       }
     }
     case 'setIsWarning': {
       return {
         ...state,
-        isWarning: action.payload.isWarning
+        isWarning: action.payload.isWarning,
       }
     }
-    default: return state
+    default:
+      return state
   }
 }
 
@@ -205,104 +192,93 @@ const addEmojis = (state: State, action: Action): State => {
       }
       return {
         ...state,
-        inputValue: value
+        inputValue: value,
       }
     }
-    default: return state
+    default:
+      return state
   }
 }
 
 // I have moved more logic into useAutoComplete
-function useAutoComplete ({
-  stateReducer = (state: State, action: Action) => state
-} = {}) {
-  const [state, dispatch] = useReducer(
-    combineReducers(autoCompleteReducer, stateReducer),
-    { inputValue: '', isOpen: false, isLoading: false, isWarning: false }
-  )
+function useAutoComplete({ stateReducer = (state: State, action: Action) => state } = {}) {
+  const [state, dispatch] = useReducer(combineReducers(autoCompleteReducer, stateReducer), {
+    inputValue: '',
+    isOpen: false,
+    isLoading: false,
+    isWarning: false,
+  })
   const effectFactory = (action$: Observable<Action>, state$: Observable<State>) => {
     const warn$ = state$.pipe(
-      map(state => state.inputValue),
-      filter(value => value.length > 30),
+      map((state) => state.inputValue),
+      filter((value) => value.length > 30),
       tap(() => {
-        dispatch({type: 'setIsLoading', payload: { isLoading: false }})
-        dispatch({type: 'setIsWarning', payload: { isWarning: true }})
+        dispatch({ type: 'setIsLoading', payload: { isLoading: false } })
+        dispatch({ type: 'setIsWarning', payload: { isWarning: true } })
         closeMenu()
       }),
-      mapTo([] as string[])
+      mapTo([] as string[]),
     )
     const default$ = action$.pipe(
-      filter(action => action.type === 'change'),
+      filter((action) => action.type === 'change'),
       withLatestFrom(state$), // state$ is up to date before I call debounceTime
       debounceTime(500),
       map(([_action, state]) => state.inputValue),
-      filter(value => value.length > 0 && value.length <= 30),
+      filter((value) => value.length > 0 && value.length <= 30),
       tap(() => {
-        dispatch({type: 'setIsLoading', payload: { isLoading: true }})
-        dispatch({type: 'setIsWarning', payload: { isWarning: false }})
+        dispatch({ type: 'setIsLoading', payload: { isLoading: true } })
+        dispatch({ type: 'setIsWarning', payload: { isWarning: false } })
       }),
-      switchMap(value => fakeFetchData(value).pipe(takeUntil(warn$))),
+      switchMap((value) => fakeFetchData(value).pipe(takeUntil(warn$))),
       tap(() => {
-        dispatch({type: 'setIsLoading', payload: { isLoading: false }})
+        dispatch({ type: 'setIsLoading', payload: { isLoading: false } })
         openMenu()
-      })
+      }),
     )
     return merge(default$, warn$)
   }
-  const [items, dispatchWithEffect] = useReducerEffect(
-    effectFactory,
-    state,
-    dispatch
-  )
+  const [items, dispatchWithEffect] = useReducerEffect(effectFactory, state, dispatch)
 
   const handleEvent = (type: string, payload?: object) => () => {
     const action = payload ? { type, payload } : { type }
     dispatch(action)
   }
-  const getInputProps = ({
-    onChange = undefined, ...props
-  }: InputProps = {}) => {
+  const getInputProps = ({ onChange, ...props }: InputProps = {}) => {
     const handleChange = (e: React.ChangeEvent) => {
       const value = (e.target as HTMLInputElement).value
       // use new dispatch !!!!!!!!!
-      dispatchWithEffect({type: 'change', payload: { inputValue: value}})
-    } 
+      dispatchWithEffect({ type: 'change', payload: { inputValue: value } })
+    }
     return {
       value: state.inputValue,
       onChange: callAll(onChange, handleChange),
-      ...props
+      ...props,
     }
   }
-  const getToggleButtonProps = ({
-    onClick = undefined, ...props
-  }: ToggleButtonProps = {}) => {
+  const getToggleButtonProps = ({ onClick, ...props }: ToggleButtonProps = {}) => {
     return {
       isOpen: state.isOpen,
       onClick: callAll(onClick, handleEvent('toggle')),
-      ...props
+      ...props,
     }
   }
-  const getClearButtonProps = ({
-    onClick = undefined, ...props
-  }: ClearButtonProps = {}) => {
+  const getClearButtonProps = ({ onClick, ...props }: ClearButtonProps = {}) => {
     return {
       onClick: callAll(onClick, handleEvent('clear')),
-      ...props
+      ...props,
     }
   }
-  const getItemProps =  ({
-    selectedValue, onClick = undefined, ...props
-  }: ItemProps) => {
+  const getItemProps = ({ selectedValue, onClick, ...props }: ItemProps) => {
     return {
       onClick: callAll(onClick, handleEvent('select', { selectedValue })),
-      ...props
+      ...props,
     }
   }
   const openMenu = () => {
-    dispatch({type: 'open'})
+    dispatch({ type: 'open' })
   }
   const closeMenu = () => {
-    dispatch({type: 'close'})
+    dispatch({ type: 'close' })
   }
   return {
     inputValue: state.inputValue,
@@ -315,12 +291,12 @@ function useAutoComplete ({
     getClearButtonProps,
     getItemProps,
     openMenu,
-    closeMenu
+    closeMenu,
   }
 }
 
 // AutoComplete becomes cleaner
-export default function AutoComplete () {
+export default function AutoComplete() {
   const {
     inputValue,
     isOpen,
@@ -332,33 +308,22 @@ export default function AutoComplete () {
     getClearButtonProps,
     getItemProps,
   } = useAutoComplete({
-    stateReducer: addEmojis
+    stateReducer: addEmojis,
   })
   const inputRef = useRef(null)
   const focusInput = () => {
     const input = inputRef.current
-    if (input)
-    (input as HTMLInputElement).focus()
+    if (input) (input as HTMLInputElement).focus()
   }
   return (
     <div className="autocomplete">
       <Warn visibility={isWarning} />
       <div className="autocomplete-input-wrapper">
-        <input
-          className="autocomplete-input"
-          ref={inputRef}
-          {...getInputProps()}
-        />
+        <input className="autocomplete-input" ref={inputRef} {...getInputProps()} />
         <SearchIcon />
-        <ClearButton {...getClearButtonProps({onClick: focusInput, visibility: inputValue !== ''})} />
+        <ClearButton {...getClearButtonProps({ onClick: focusInput, visibility: inputValue !== '' })} />
         <div className="autocomplete-button-wrpper">
-          { 
-            isLoading
-              ? <Loading />
-              : items && items.length
-                ? <ToggleButton {...getToggleButtonProps()} />
-                : null
-          }
+          {isLoading ? <Loading /> : items && items.length ? <ToggleButton {...getToggleButtonProps()} /> : null}
         </div>
       </div>
       <Menu items={items} isOpen={isOpen} isLoading={isLoading} getItemProps={getItemProps} />
