@@ -162,7 +162,7 @@ export function fakeFetchData(value: string): Observable<string[]> {
 }
 
 /* I can move more logic in useAutoComplete, like the 'isLoading' and 'isWarning'
-state or even the rxjs related code. But i want to make useAutoComplete minimum
+state or even the rxjs related code. But I want to make useAutoComplete minimum
 API here. */
 
 export default function AutoComplete() {
@@ -281,4 +281,4 @@ The second solution can solve the intial problem, but will add many unnecessary 
 The best solution I think is to subscribe to the action stream.
 
 I have create a 'useReducerEffect' hook to solve this problem. Please see the comment in
-'AutoComplete_test.tsx' */
+'AutoComplete_fix.tsx' */
